@@ -14,7 +14,7 @@ body{
     align-items: center;
     background-color: #FFFFFF;
     width: 500px;
-    padding: 50px 30px 30px 30px;
+    padding: 20px 30px 30px 30px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -23,6 +23,7 @@ body{
     font-size: 40px;
     font-weight: 700;
     margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 .form{
@@ -98,6 +99,7 @@ body{
 }
 
 .clear{
+    display: none;
     margin-top: 10px;
     font-size: 20px;
     color: #D84040;
@@ -107,7 +109,28 @@ body{
     transition: color 0.3s ease-in-out;
 }
 
+.clear.active{
+    display: block;
+}
+
 .clear:hover{
     color: #8E1616;
 }
 
+.warning{
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    width: 100%;
+    background-color: #FFFFFF;
+}
+
+.warning.green{
+    background-color: #BAD8B6;
+}
+
+.warning.red{
+    background-color: #FFC4C4;
+}
