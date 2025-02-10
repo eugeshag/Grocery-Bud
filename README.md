@@ -11,6 +11,6 @@ A simple and efficient grocery list manager that allows users to add, edit, and 
 - 🔵 CSS
 - 🟡 JavaScript
 ## 🛠️ Installation  
-1. Clone the repository: `git clone https://github.com/eugeshag/redi-school-project.git`
+1. Clone the repository: `git clone https://github.com/eugeshag/Grocery-Bud.git`
 2. Open `index.html` in your browser
 
