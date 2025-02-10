@@ -1,6 +1,6 @@
-function showWarning(color, message){
+function showWarning(color, message) {
     const warning = document.querySelector('.warning');
-    if(!warning) return;
+    if (!warning) return;
 
     warning.classList.add(color);
     warning.innerText = message;
@@ -15,94 +15,92 @@ class Product {
     constructor(name, id) {
         this.name = name;
         this.id = id;
-        this.productHTML = `<div id="${this.id}" class="product">
-                <div class="product__name">${this.name}</div>
-                <button data-id='${this.id}' class="product__edit"></button>
-                <button data-id='${this.id}' class="product__delete"></button>
-            </div>`
     }
 
-    generateNewProductHTML(newName){
-        this.productHTML = `<div id="${this.id}" class="product">
-                    <div class="product__name">${newName}</div>
-                    <button data-id='${this.id}' class="product__edit"></button>
-                    <button data-id='${this.id}' class="product__delete"></button>
-                </div>`
+    generateHTML() {
+        return `
+            <div id="${this.id}" class="product">
+                <div class="product__name">${this.name}</div>
+                <button data-id="${this.id}" class="product__edit"></button>
+                <button data-id="${this.id}" class="product__delete"></button>
+            </div>`;
     }
 }
 
 class Products {
 
     constructor(productsFromLocalStorage = []) {
-        if(productsFromLocalStorage){
-            this.productsList = productsFromLocalStorage.map(product => Object.assign(new Product(), product));
-        }
-        else {
-            this.productsList = [];
-        }
-
+        this.productsList = productsFromLocalStorage.map(product => new Product(product.name, product.id));
         this.productsDomElement = document.getElementById('products');
-        this.productsDomElement.addEventListener('click', (event) => {
-            if (event.target.className === 'product__delete') {
+        this.isEditing = false;
+        this.productToEdit = null;
+        this.init();
+    }
+
+    init() {
+        document.addEventListener('click', (event) => {
+            if (event.target.matches('.product__delete')) {
                 this.deleteProduct(event.target.dataset.id);
             }
-        });
-
-        this.productsDomElement.addEventListener('click', (event) => {
-            if (event.target.className === 'product__edit') {
+            else if (event.target.matches('.product__edit')) {
                 this.editProduct(event.target.dataset.id);
             }
         });
 
-        this.isEditing = false;
-        this.productToEditDom = null;
-        this.productToEditObject = null;
+        document.getElementById('main-button').addEventListener('click', () => this.addProduct());
+        document.getElementById('clear-button').addEventListener('click', () => this.clear());
+
+        document.getElementById("input").addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                document.getElementById("main-button").click();
+            }
+        });
+
+        this.render();
+
+    }
+
+    saveToLocalStorage() {
+        localStorage.setItem('products', JSON.stringify(this.productsList));
     }
 
     addProduct() {
 
-        if (this.isEditing) {
-            const input = document.getElementById("input");
-            const productName = input.value.trim();
-            if (productName === ''){
-                showWarning('red', 'Please enter a name')
-                return
-            };
-
-            this.productToEditObject.name = productName;
-            this.productToEditObject.generateNewProductHTML(productName);
-
-            this.productToEditDom.querySelector('.product__name').innerText = productName;
-            localStorage.setItem('products', JSON.stringify(this.productsList));
-
-            const mainButton = document.getElementById('main-button');
-            mainButton.innerText = 'Add';
-            this.isEditing = false;
-            this.productToEdit = null;
-            input.value = '';
-
-            showWarning('green', 'Product edited')
-            return
-        }
-
-
-
         const input = document.getElementById("input");
         const productName = input.value.trim();
-        if (!productName){
-            showWarning('red', 'Please enter a name')
-            return
+        if (!productName) {
+            showWarning('red', 'Please enter a name');
+            return;
+        };
+
+        if (this.isEditing) {
+            this.productToEdit.name = productName;
+            this.updateProductHTML(this.productToEdit.id, productName);
+            this.isEditing = false;
+            this.productToEdit = null;
+            document.getElementById('main-button').innerText = 'Add';
+            showWarning('green', 'Product edited')
+
+        } else {
+            const productId = crypto.randomUUID();
+            let product = new Product(productName, productId);
+            this.productsList.push(product);
+            this.productsDomElement.insertAdjacentHTML('beforeend', product.generateHTML());
+            showWarning('green', 'Product added')
+            document.getElementById('clear-button').classList.add('active')
         }
 
-        const productId = crypto.randomUUID();
-
-        let product = new Product(productName, productId);
-        this.productsList.push(product);
-        this.productsDomElement.innerHTML += product.productHTML;
-        localStorage.setItem('products', JSON.stringify(this.productsList));
         input.value = '';
-        showWarning('green', 'Product added')
-        document.getElementById('clear-button').classList.add('active')
+        this.saveToLocalStorage();
+
+    }
+
+    updateProductHTML(id, newName) {
+        const productDom = document.getElementById(id);
+        if (productDom) {
+            productDom.querySelector('.product__name').innerText = newName;
+        }
+        this.saveToLocalStorage();
     }
 
     deleteProduct(id) {
@@ -112,10 +110,10 @@ class Products {
         }
 
         this.productsList = this.productsList.filter(product => product.id !== id);
-        localStorage.setItem('products', JSON.stringify(this.productsList));
+        this.saveToLocalStorage();
         showWarning('red', 'Product deleted')
 
-        if (this.productsList.length == 0){
+        if (this.productsList.length === 0) {
             this.clear()
             document.getElementById('clear-button').classList.remove('active')
         }
@@ -123,55 +121,31 @@ class Products {
 
     editProduct(id) {
         this.isEditing = true;
-
-        this.productToEditDom = document.getElementById(id);
-        this.productToEditObject = this.productsList.find(product => product.id === id)
-        const mainButton = document.getElementById('main-button');
+        this.productToEdit = this.productsList.find(product => product.id === id)
+        document.getElementById('main-button').innerText = 'Edit'
         const input = document.getElementById('input');
-        mainButton.innerText = 'Edit'
         input.placeholder = "New name";
-        input.value = this.productToEditDom.innerText.trim();
+        input.value = this.productToEdit.name;
     }
 
     render() {
-        this.productsList.forEach(product => {
-            this.productsDomElement.innerHTML += product.productHTML;
-        });
-        if(this.productsList){
-            document.getElementById('clear-button').classList.add('active')
-        }
+        this.productsDomElement.innerHTML = this.productsList.map(product => product.generateHTML()).join('');
+        document.getElementById('clear-button').classList.toggle('active', this.productsList.length > 0);
     }
 
-    clear(){
+    clear() {
         localStorage.clear();
         this.productsList = [];
         this.productsDomElement.innerHTML = '';
         this.isEditing = false;
-        this.productToEditDom = null;
-        this.productToEditObject = null;
-        const mainButton = document.getElementById('main-button');
+        this.productToEdit = null;
+        document.getElementById('main-button').innerText = 'Add';
         const input = document.getElementById('input');
-        mainButton.innerText = 'Add'
         input.placeholder = "Name of product";
         input.value = '';
-        showWarning('red', 'All products have been deleted')
-        document.getElementById('clear-button').classList.remove('active')
+        showWarning('red', 'All products have been deleted');
+        document.getElementById('clear-button').classList.remove('active');
     }
 }
 
-localStorageProducts = JSON.parse(localStorage.getItem('products'));
-const products = new Products(localStorageProducts);
-products.render();
-
-const mainButton = document.getElementById('main-button');
-const clearButton = document.getElementById('clear-button');
-mainButton.addEventListener('click', () => products.addProduct());
-clearButton.addEventListener('click', () => {
-    products.clear();
-});
-
-document.getElementById("input").addEventListener("keydown", function(event) {
-    if (event.key === "Enter") { 
-        document.getElementById("main-button").click();
-    }
-});
+const products = new Products(JSON.parse(localStorage.getItem('products') || '[]'));
