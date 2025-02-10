@@ -1,4 +1,4 @@
-# 📦 ReDI School Project (Grocery Bud)
+# 📦 Grocery Bud 
 A simple and efficient grocery list manager that allows users to add, edit, and remove items. The project is built with JavaScript and uses localStorage to persist data even after a page refresh.
 ## 🚀 Features
 - ✅ Add new grocery items
